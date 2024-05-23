@@ -1,5 +1,7 @@
 package br.com.bartieres.jasper.boleto.service.impl;
 
+import br.com.bartieres.jasper.boleto.dto.Beneficiario;
+import br.com.bartieres.jasper.boleto.dto.Boleto;
 import br.com.bartieres.jasper.boleto.dto.BoletoReport;
 import br.com.bartieres.jasper.boleto.report.ReportGenerator;
 import br.com.bartieres.jasper.boleto.service.BoletoService;
@@ -19,9 +21,16 @@ public class BoletoServiceImpl implements BoletoService {
                 .dtVencimento(formatter.format(LocalDate.now().plusDays(2)))
                 .qrCode("")
                 .linhaDigitavel("")
+                .nomeBeneficiario("Andre Bartieres")
                 .build();
 
+        Beneficiario beneficiario = Beneficiario.novoBeneficiario();
+        beneficiario.comNomeBeneficiario("Andre Bartieres");
+
+        Boleto boleto2 = Boleto.novoBoleto();
+        boleto2.comBeneficiario(beneficiario);
+
         var map = ReportGenerator.createMapObjectToReport(boleto);
-        ReportGenerator.createReportFile(map);
+        ReportGenerator.createReportFile(boleto2);
     }
 }
