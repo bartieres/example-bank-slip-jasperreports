@@ -4,6 +4,8 @@
 
 This application is a simple Java-based solution for generating bank payment slips (boletos) using JasperReports. It allows users to create customizable boleto PDFs that comply with Brazilian banking standards.
 
+![image](https://github.com/bartieres/example-bank-slip-jasperreports/assets/17927909/d3002481-8d82-4466-9d94-31f6e103d7ce)
+
 ## Features
 
 - Generate boletos in PDF format.
