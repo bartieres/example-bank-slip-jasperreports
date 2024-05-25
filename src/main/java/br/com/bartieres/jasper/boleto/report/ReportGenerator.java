@@ -1,71 +1,70 @@
 package br.com.bartieres.jasper.boleto.report;
 
-import br.com.bartieres.jasper.boleto.dto.BoletoReport;
-import net.sf.jasperreports.engine.JREmptyDataSource;
+import br.com.bartieres.jasper.boleto.dto.Boleto;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 public class ReportGenerator {
 
-    public static Map<String, Object> createMapObjectToReport(BoletoReport report) {
-        var map = new HashMap<String, Object>();
-        map.put("logo", getImage("logo.png"));
-        map.put("qrCode", report.getQrCode());
-        map.put("linhaDigitavel", report.getLinhaDigitavel());
-        map.put("dtVencimento", report.getDtVencimento());
-        return map;
-    }
+    public static void createReportFile(Boleto report) {
 
-    private static Object getImage(String s) {
-
-        Image image = null;
-        InputStream stream;
-        try {
-            var url = ReportGenerator.class.getClassLoader().getResource("images");
-            File initialFile = new File(url.getPath().concat("/").concat(s));
-            stream = new FileInputStream(initialFile);
-            byte[] bytesImage = stream.readAllBytes();
-            ImageIcon imageIcon = new ImageIcon(bytesImage);
-            image = imageIcon.getImage();
-            stream.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return  image;
-    }
-
-    public static void createReportFile(Map<String, Object> mapReport) {
-
-        String file = "/jasper/report.jasper";
+        String file = "/src/main/resources/jasper/boleto.jasper";
 
         try {
             Path path = Paths.get("");
-            String jasperFilePath = path.toAbsolutePath().toString() + file;
+            String jasperFilePath = path.toAbsolutePath() + file;
 
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperFilePath, mapReport, new JREmptyDataSource());
-            byte[] report = JasperExportManager.exportReportToPdf(jasperPrint);
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(report));
+            var jasperPrint = JasperFillManager.fillReport(jasperFilePath, null, dataSource);
 
-            writeBytesToFileNio("/relatorios/Relatorio1.pdf", report);
+            byte[] reportByte = JasperExportManager.exportReportToPdf(jasperPrint);
+
+            writeBytesToFileNio("/src/main/resources/relatorios/Relatorio.pdf", reportByte);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
     private static void writeBytesToFileNio(String s, byte[] report) throws IOException {
-        Path path = Paths.get(s);
-        Files.write(path, report);
+        Path path = Paths.get("");
+        String jasperFilePath = path.toAbsolutePath() + s;
+        Path path2 = Paths.get(jasperFilePath);
+        Files.write(path2, report);
+    }
+
+    public static BufferedImage generateQRCodeImage(String text, int width, int height) {
+        try {
+            QRCodeWriter qrCodeWriter = new QRCodeWriter();
+            BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
+            return MatrixToImageWriter.toBufferedImage(bitMatrix);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex.getLocalizedMessage());
+        }
+    }
+
+    public static BufferedImage loadImage(String path) {
+        try (InputStream inputStream = ReportGenerator.class.getResourceAsStream(path)) {
+            if (inputStream == null) {
+                throw new IOException("Recurso não encontrado: " + path);
+            }
+            return ImageIO.read(inputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
