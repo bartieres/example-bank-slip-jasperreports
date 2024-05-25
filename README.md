@@ -1,4 +1,4 @@
-# Boleto Generator with JasperReports
+# Example of a bank slip with JasperReports
 
 ## Introduction
 
